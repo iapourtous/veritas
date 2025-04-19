@@ -23,11 +23,6 @@ La chaîne de traitement de Veritas fonctionne comme suit :
 
 ## Installation
 
-```bash
-# Cloner le dépôt
-git clone https://github.com/votre-username/veritas.git
-cd veritas
-
 # Créer et activer un environnement virtuel
 python -m venv venv
 source venv/bin/activate  # Sur Windows : venv\Scripts\activate
