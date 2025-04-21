@@ -14,28 +14,49 @@ La chaîne de traitement de Veritas fonctionne comme suit :
 6. 🗣️ **Agent 3** : Génération d'une réponse basée **uniquement** sur les phrases sélectionnées
 7. 📐 **Alignement Levenshtein** : Vérification que chaque partie de la réponse est bien extraite du document original
 
-## Nouveautés
-
-- **Outil de nettoyage de PDF** : Prétraitement intelligent des PDFs avec formatage IA
-- **Expansion de requête** : Transformation des questions en requêtes enrichies pour de meilleurs résultats
-- **Respect strict du texte original** : Garantie que l'agent 3 utilise les phrases exactes sans modification
-- **Formats multiples** : Export en PDF, texte ou JSON
 
 ## Installation
+
+### Installation à partir des sources
+
+```bash
+# Cloner le dépôt
+git clone https://github.com/iapourtous/veritas.git
+cd veritas
 
 # Créer et activer un environnement virtuel
 python -m venv venv
 source venv/bin/activate  # Sur Windows : venv\Scripts\activate
 
-# Installer les dépendances
-pip install -r requirements.txt
+# Installer le package en mode développement
+pip install -e .
 
 # Configurer l'API key (copier et modifier le fichier d'exemple)
 cp config/.env.example config/.env
 # Éditer config/.env pour ajouter votre API key
 ```
 
+### Installation via pip (à venir)
+
+```bash
+pip install veritas
+```
+
 ## Utilisation
+
+### En mode développement (après pip install -e .)
+
+Après l'installation en mode développement, vous pouvez utiliser Veritas de deux façons :
+
+```bash
+# Utilisation directe avec python -m
+python -m veritas.cli document.pdf "Ma question?"
+python -m veritas.clean_pdf document.pdf --format text
+
+# OU en utilisant les points d'entrée installés (selon votre environnement)
+veritas document.pdf "Ma question?"
+cleanpdf document.pdf
+```
 
 ### 1. Nettoyage des PDFs (recommandé)
 
@@ -43,14 +64,14 @@ Avant d'interroger un document, il est recommandé de le nettoyer pour améliore
 
 ```bash
 # Générer un nouveau PDF avec texte nettoyé (par défaut)
-./cleanPdf.py document.pdf
+python -m veritas.clean_pdf document.pdf
 
 # Autres formats disponibles
-./cleanPdf.py document.pdf --format text  # Fichier texte
-./cleanPdf.py document.pdf --format json  # Extraction de phrases en JSON
+python -m veritas.clean_pdf document.pdf --format text  # Fichier texte
+python -m veritas.clean_pdf document.pdf --format json  # Extraction de phrases en JSON
 
 # Options
-./cleanPdf.py document.pdf --output chemin/sortie.pdf --verbose
+python -m veritas.clean_pdf document.pdf --output chemin/sortie.pdf --verbose
 ```
 
 ### 2. Interrogation du document
@@ -59,28 +80,28 @@ Une fois le document nettoyé, vous pouvez l'interroger avec des questions en la
 
 ```bash
 # Interroger le document nettoyé
-./veritas.py document_clean.pdf "Quelle est la définition de X dans ce document?"
+python -m veritas.cli document_clean.pdf "Quelle est la définition de X dans ce document?"
 
 # Ou interroger directement le PDF original (moins précis)
-./veritas.py document.pdf "Votre question sur le document?"
+python -m veritas.cli document.pdf "Votre question sur le document?"
 
 # Options avancées
-./veritas.py document.pdf "Ma question?" --verbose --debug --output rapport.json
+python -m veritas.cli document.pdf "Ma question?" --verbose --debug --output rapport.json
 
 # Désactiver l'expansion de requête pour BM25
-./veritas.py document.pdf "Ma question?" --no-query-expansion
+python -m veritas.cli document.pdf "Ma question?" --no-query-expansion
 ```
 
 ## Options
 
-### Options de veritas.py
+### Options de veritas.cli
 
 - `--output`, `-o` : Chemin vers un fichier de sortie pour enregistrer les détails complets en JSON
 - `--verbose`, `-v` : Afficher des informations détaillées sur le processus
 - `--debug`, `-d` : Activer le mode debug avec plus d'informations (requêtes enrichies, etc.)
 - `--no-query-expansion` : Désactiver l'expansion de requête pour BM25
 
-### Options de cleanPdf.py
+### Options de veritas.clean_pdf
 
 - `--output`, `-o` : Chemin de sortie personnalisé pour le fichier généré
 - `--format`, `-f` : Format de sortie (`pdf`, `text` ou `json`)
@@ -89,29 +110,45 @@ Une fois le document nettoyé, vous pouvez l'interroger avec des questions en la
 ## Exemples
 
 ```bash
-# Nettoyer un document sur le RGPD
-./cleanPdf.py rgpd.pdf
+# Exemple concret avec le fichier alice.pdf fourni dans le projet
+python -m veritas.cli alice.pdf "Comment s'appelle le chat d'Alice ?"
+# Résultat :
+# ================================================================================
+# QUESTION: Comment s'appelle le chat d'Alice ?
+# --------------------------------------------------------------------------------
+# RÉPONSE: Pourtant je voudrais bien vous montrer Dinah, notre chatte..
+# --------------------------------------------------------------------------------
+# SOURCES:
+# - Page 28
+# ================================================================================
 
-# Poser une question sur les droits des personnes concernées
-./veritas.py rgpd_clean.pdf "Quels sont les droits des personnes concernées selon le RGPD?"
-
-# Question sur les obligations des responsables de traitement avec debug
-./veritas.py rgpd_clean.pdf "Quelles sont les obligations des responsables de traitement?" --debug
 ```
 
 ## Configuration
 
-Les paramètres configurables sont disponibles dans le fichier `config/.env` :
+La configuration de Veritas utilise une approche hybride combinant fichiers YAML et variables d'environnement:
 
-- `CREW_API_KEY` : Clé API pour les modèles de langage
-- `CREW_BASE_URL` : URL de base pour l'API (par défaut : "https://openrouter.ai/api/v1")
-- `CREW_MODEL` : Modèle à utiliser (par défaut : "openrouter/openai/gpt-4.1-mini")
-- `CREW_TEMPERATURE` : Température pour la génération (par défaut : 0.7)
-- `CREW_MAX_TOKENS` : Nombre maximum de tokens (par défaut : 4000)
-- `MIN_SIMILARITY_THRESHOLD` : Seuil de similarité Levenshtein (par défaut : 0.75)
-- `BM25_TOP_K` : Nombre de pages à présélectionner par BM25 (par défaut : 20)
-- `DEBUG` : Mode debug (par défaut : False)
-- `QUERY_EXPANSION` : Activation de l'expansion de requête (par défaut : True)
+1. **Fichiers YAML** : Contiennent la configuration de base dans `config/yaml/`
+   - `defaults.yaml` : Configuration par défaut (modèles, paramètres, etc.)
+   - `agents.yaml` : Configuration des agents (rôles, objectifs, etc.)
+   - `prompts.yaml` : Templates de prompts pour les agents
+
+2. **Variables d'environnement** : Définies dans `config/.env` pour remplacer les valeurs par défaut
+   - `CREW_API_KEY` : Clé API pour les modèles de langage
+   - `CREW_BASE_URL` : URL de base pour l'API
+   - `CREW_MODEL` : Modèle à utiliser
+   - `CREW_TEMPERATURE` : Température pour la génération
+   - `CREW_MAX_TOKENS` : Nombre maximum de tokens
+   - `MIN_SIMILARITY_THRESHOLD` : Seuil de similarité Levenshtein
+   - `BM25_TOP_K` : Nombre de pages à présélectionner par BM25
+   - `DEBUG` : Mode debug
+   - `QUERY_EXPANSION` : Activation de l'expansion de requête
+
+### Priorité des configurations
+
+1. Variables d'environnement (priorité la plus haute)
+2. Fichier .env
+3. Fichiers YAML (priorité la plus basse)
 
 ## Dépendances principales
 
@@ -122,23 +159,35 @@ Les paramètres configurables sont disponibles dans le fichier `config/.env` :
 - python-Levenshtein : Calcul des distances d'édition
 - nltk : Découpage en phrases
 - ftfy & unidecode : Nettoyage et normalisation de texte
+- pyyaml : Gestion des fichiers de configuration YAML
 
 ## Architecture du projet
 
 ```
 veritas/
 ├── config/
-│   └── .env.example       # Configuration par défaut
-├── lib/
-│   ├── __init__.py
-│   ├── agents.py          # Définition des agents IA
-│   ├── bm25.py            # Implémentation de l'algorithme BM25
-│   ├── config.py          # Gestion de la configuration
-│   ├── levenshtein.py     # Fonctions d'alignement de texte
-│   └── pdf_parser.py      # Extraction et découpage du texte PDF
-├── cleanPdf.py            # Outil de nettoyage de PDF
-├── veritas.py             # Point d'entrée principal
-└── requirements.txt       # Dépendances
+│   ├── .env.example        # Exemple de variables d'environnement
+│   └── yaml/               # Configuration en YAML
+│       ├── defaults.yaml   # Configuration par défaut
+│       ├── agents.yaml     # Configuration des agents
+│       └── prompts.yaml    # Templates de prompts
+├── src/
+│   ├── veritas/            # Package principal
+│   │   ├── __init__.py     # Initialisation du package
+│   │   ├── clean_pdf.py    # Module de nettoyage de PDF
+│   │   ├── cli.py          # Interface en ligne de commande
+│   │   └── core.py         # Fonctionnalités principales
+│   └── lib/                # Bibliothèques partagées
+│       ├── __init__.py
+│       ├── agents.py       # Définition des agents IA
+│       ├── bm25.py         # Implémentation de l'algorithme BM25
+│       ├── config.py       # Interface de configuration
+│       ├── yaml_config.py  # Gestionnaire de configuration YAML
+│       ├── levenshtein.py  # Fonctions d'alignement de texte
+│       └── pdf_parser.py   # Extraction et découpage du texte PDF
+├── pyproject.toml          # Configuration du package
+├── README.md               # Documentation
+└── requirements.txt        # Dépendances (pour rétrocompatibilité)
 ```
 
 ## Limitations

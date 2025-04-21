@@ -39,3 +39,8 @@ venv.bak/
 # Project specific
 .env
 *.log
+
+# Explicitly include example files
+!alice.pdf
+!config/yaml/*.yaml
+!config/.env.example

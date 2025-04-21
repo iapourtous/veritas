@@ -1,0 +1,22 @@
+# Configuration par défaut pour Veritas
+
+# Configuration des agents/LLM
+crew:
+  api_key: ""  # À remplir dans config_local.yaml
+  base_url: "https://openrouter.ai/api/v1"
+  model: "openrouter/openai/gpt-4.1-mini"
+  temperature: 0.7
+  max_tokens: 4000
+
+# Configuration spécifique à Veritas
+veritas:
+  min_similarity_threshold: 0.75
+  bm25_top_k: 20
+  debug: false
+  query_expansion: true
+  
+# Configuration de télémétrie
+telemetry:
+  crewai_telemetry: false
+  telemetry_enabled: false
+  opentelemetry_enabled: false

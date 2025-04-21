@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veritas"
+version = "0.1.0"
+description = "Une chaîne d'agents IA qui répond aux questions sur un PDF sans halluciner, en utilisant uniquement des phrases extraites du document"
+authors = [
+    { name = "Lemasson Patrick", email = "l.patrick74210@outlook.com" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "crewai==0.114.0",
+    "python-dotenv>=1.0.0",
+    "argparse>=1.4.0",
+    "litellm>=1.30.0",
+    "langchain>=0.0.335",
+    "pypdf==4.0.1",
+    "nltk==3.8.1",
+    "scikit-learn==1.3.2",
+    "numpy==1.26.3",
+    "python-Levenshtein==0.22.0",
+    "tqdm==4.66.1",
+    "ftfy==6.1.3",
+    "unidecode==1.3.8",
+    "reportlab==4.0.9",
+    "pyyaml==6.0.1"
+]
+
+[project.urls]
+Home = "https://github.com/ton-org/veritas"
+Issues = "https://github.com/ton-org/veritas/issues"
+
+[tool.setuptools]
+# Indique que les paquets sont dans src/
+package-dir = {"" = "src"}
+packages = ["veritas", "lib"]
+
+[project.scripts]
+veritas = "veritas.cli:main"
+cleanpdf = "veritas.clean_pdf:main"

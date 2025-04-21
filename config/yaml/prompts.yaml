@@ -1,0 +1,140 @@
+# Prompts pour les agents Veritas
+
+page_selector:
+  task_description: |
+    QUESTION: {question}
+    
+    Tu dois sélectionner les pages véritablement pertinentes pour répondre à cette question.
+    
+    Voici les pages présélectionnées par un algorithme de recherche:
+    {pages_preview}
+    
+    INSTRUCTIONS CRITIQUES:
+    1. Examine attentivement chaque page présélectionnée
+    2. Détermine quelles pages contiennent des informations DIRECTEMENT pertinentes pour la question
+    3. Recherche spécifiquement:
+       - Les pages qui répondent EXPLICITEMENT à la question posée
+       - Les pages contenant des informations juridiques ou techniques précises liées à la question
+       - Les exemples concrets ou cas spécifiques répondant à la question
+    4. ÉVITE de sélectionner des pages qui:
+       - Ne mentionnent le sujet que de façon tangentielle ou contextuelle
+       - Contiennent des informations trop générales sans répondre précisément
+       - Font seulement référence à d'autres sections
+    5. Explique tes choix pour chaque page
+    6. Retourne UNIQUEMENT les indices des pages pertinentes dans un tableau JSON formaté comme suit:
+       {"selected_pages": [0, 2, 5]}
+    
+    IMPORTANT: Sois très sélectif. Il vaut mieux choisir peu de pages vraiment pertinentes que beaucoup de pages partiellement pertinentes.
+    La qualité de la réponse finale dépend entièrement de ta sélection.
+  expected_output: "Un JSON contenant les indices des pages les plus pertinentes sélectionnées."
+
+sentence_filter:
+  task_description: |
+    QUESTION: {question}
+    
+    Tu dois sélectionner UNIQUEMENT les phrases qui contiennent des informations DIRECTEMENT pertinentes 
+    pour répondre PRÉCISÉMENT à cette question.
+    
+    Voici toutes les phrases extraites des pages pertinentes:
+    {sentences}
+    
+    INSTRUCTIONS STRICTES:
+    1. Analyse chaque phrase individuellement par rapport à la question
+    2. Interprète la question de manière LITTÉRALE et cherche les phrases qui y répondent EXPLICITEMENT
+    3. Pour cette question "{question}":
+       - Identifie les phrases qui mentionnent PRÉCISÉMENT le sujet demandé 
+       - Priorise les phrases qui contiennent des RÉPONSES CONCRÈTES (chiffres, durées, règles spécifiques)
+       - Cherche des EXEMPLES ou CAS PRATIQUES qui illustrent directement la réponse
+    
+    4. Sélectionne UNIQUEMENT les phrases qui:
+       - Répondent DIRECTEMENT à la question posée
+       - Contiennent des INFORMATIONS FACTUELLES et PRÉCISES liées à la question
+       - Apportent une VALEUR AJOUTÉE claire à la réponse
+    
+    5. ÉVITE DE SÉLECTIONNER les phrases qui:
+       - Ne mentionnent le sujet que de façon tangentielle
+       - Sont purement contextuelles ou introductives
+       - Ne contiennent que des informations très générales
+       - Font référence à d'autres sections sans apporter d'information concrète
+    
+    6. Retourne directement les phrases pertinentes sélectionnées, dans leur forme originale complète, 
+       dans un tableau JSON (et non leurs indices). Format:
+       {"selected_sentences": ["Phrase complète 1", "Phrase complète 2", "Phrase complète 3"]}
+    
+    Sois EXTRÊMEMENT sélectif - il vaut mieux choisir 2-3 phrases parfaitement pertinentes que 10 phrases partiellement pertinentes.
+    
+    ATTENTION:
+    - Pour une question factuelle, cherche une RÉPONSE FACTUELLE précise
+    - Pour une question sur une définition, cherche une DÉFINITION explicite
+    - Pour une question sur des règles, cherche l'ÉNONCÉ EXACT des règles
+    
+    IMPORTANT: N'altère JAMAIS le texte original des phrases. Conserve-les exactement telles qu'elles apparaissent.
+  expected_output: "Un JSON contenant UNIQUEMENT les phrases directement pertinentes pour répondre à la question posée."
+
+response_generator:
+  task_description: |
+    QUESTION: {question}
+    
+    Tu dois générer une réponse EXCLUSIVEMENT basée sur les phrases validées suivantes:
+    {selected_sentences}
+    
+    INSTRUCTIONS STRICTES ET CRITIQUES:
+    1. Utilise UNIQUEMENT les phrases fournies telles quelles, mot pour mot
+    2. Idéalement, COPIE-COLLE les phrases exactes sans AUCUNE modification
+    3. N'altère PAS les phrases, même pour améliorer la grammaire ou la cohérence
+    4. Limite tes interventions à:
+       - Ajouter des conjonctions simples entre les phrases (et, car, mais...)
+       - Ordonner les phrases de façon logique
+    5. Ne rajoute ABSOLUMENT AUCUNE information extérieure
+    6. Ne fais AUCUNE supposition ou extrapolation
+    7. Si les phrases ne contiennent pas assez d'informations, dis simplement que
+       tu ne peux pas répondre complètement en te basant sur les données disponibles
+    
+    TRÈS IMPORTANT:
+    - Le système vérifiera que chaque partie de ta réponse correspond EXACTEMENT aux phrases originales
+    - La précision de ces correspondances est cruciale pour éviter les hallucinations
+    - Ne reformule PAS ou ne paraphrase PAS les phrases, même légèrement
+    - Préfère assembler les phrases originales même si le résultat est moins fluide
+    
+    Ta réponse DOIT être vérifiable en la comparant mot pour mot aux phrases fournies.
+  expected_output: "Une réponse factuelle composée uniquement des phrases originales fournies, assemblées avec une intervention minimale."
+
+text_formatter:
+  task_description: |
+    Tu es chargé de corriger les erreurs de formatage du texte extrait de la page {page_number} d'un PDF.
+    
+    Voici le texte brut avec potentiellement des erreurs de formatage:
+    
+    {page_text}
+    
+    INSTRUCTIONS:
+    1. Corrige les mots incorrectement séparés par des espaces (ex: "traitem ent" -> "traitement")
+    2. Rétablis les espaces corrects autour de la ponctuation
+    3. Corrige les caractères spéciaux mal encodés
+    4. Préserve toutes les informations originales du texte
+    5. Ne modifie pas le contenu ou le sens
+    6. Ne rajoute aucune nouvelle information
+    7. Ne supprime aucune information existante
+    
+    Retourne le texte corrigé.
+  expected_output: "Le texte de la page avec les erreurs de formatage corrigées."
+
+query_expansion:
+  task_description: |
+    QUESTION ORIGINALE: {question}
+    
+    Tu dois transformer cette question en une pseudo-réponse enrichie qui sera utilisée
+    pour améliorer la recherche documentaire dans un PDF avec l'algorithme BM25.
+    
+    INSTRUCTIONS:
+    1. Imagine comment pourrait être formulée une réponse idéale à cette question
+    2. Inclus des mots-clés potentiellement pertinents, des synonymes et des concepts associés
+    3. Formule ta réponse comme un paragraphe de 3-5 phrases qui couvre les aspects importants
+    4. N'invente PAS de faits spécifiques, reste général
+    5. Utilise un vocabulaire riche et varié qui pourrait correspondre au document
+    6. Inclus les termes techniques appropriés au domaine de la question
+    
+    Ta pseudo-réponse sera utilisée pour rechercher des passages pertinents dans un document,
+    pas pour être présentée à l'utilisateur. L'objectif est d'avoir un texte riche en termes
+    pertinents pour améliorer la recherche.
+  expected_output: "Une pseudo-réponse enrichie pour améliorer la recherche BM25."
